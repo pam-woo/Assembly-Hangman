@@ -1,2 +1,3 @@
-# Assembly-Hangman
-CS21S1, CS003 - Computer Architecture Organization
+Visual Studio Code, NASM/TASM Extension
+
+DOSBOX/EMU8086 idkkk

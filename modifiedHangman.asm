@@ -28,7 +28,8 @@
          db '7. Right guess of letter will reveal its placement in the word',13,10
          db '8. Guesser wins by completing the word before running out of lives',13,10
          db '9. Word giver wins if guesser runs out of lives',13,10
-         db '10. First to win majority of rounds wins!',13,10,13,10
+         db '10. First to win majority of rounds wins!',13,10
+         db '11. BONUS: Two consecutive correct guesses grant an extra life!',13,10,13,10
          db 'Return? (Y/N): $'
 
 
@@ -58,6 +59,7 @@
     correct db ' - Correct!$'
     wrong db ' - Wrong!$'
     already db ' - Already guessed!$'
+    bonus_msg db ' - BONUS: Extra life awarded!$'
     p1_win db 13,10,13,10,'*** Player 1 wins this round! ***',13,10,'$'
     p2_win db 13,10,13,10,'*** Player 2 wins this round! ***',13,10,'$'
     word_was db 13,10,'Word was: $'
@@ -85,6 +87,7 @@
     giver db 1
     max_rounds db 5
     win_need db 3
+    consecutive_correct db 0
 
 
 
@@ -504,6 +507,7 @@ game_proc endp
 
 init proc
     mov lives, 6
+    mov consecutive_correct, 0
     mov cx, 21
     lea di, secret_word
     mov al, '$'
@@ -740,6 +744,7 @@ pg_next:
     cmp bl, 1
     je pg_ok
     dec lives
+    mov consecutive_correct, 0
     lea dx, wrong
     call print
     jmp pg_done
@@ -748,6 +753,15 @@ pg_next:
 
 
 pg_ok:
+    inc consecutive_correct
+    cmp consecutive_correct, 2
+    jne pg_ok_no_bonus
+    mov consecutive_correct, 0
+    inc lives
+    lea dx, bonus_msg
+    call print
+    jmp pg_done
+pg_ok_no_bonus:
     lea dx, correct
     call print
     jmp pg_done
@@ -756,6 +770,7 @@ pg_ok:
 
 
 pg_dup:
+    mov consecutive_correct, 0
     lea dx, already
     call print
     pop ax
@@ -1011,3 +1026,18 @@ end main
 ; New procedures
 ;show_guessed proc                        			; Shows letters already guessed
 ;get_hint proc                           			; Allows entry of hint for word
+
+; CONSECUTIVE CORRECT BONUS FEATURE (NEW)
+; consecutive_correct db 0                			; Tracks consecutive correct guesses
+; bonus_msg db ' - BONUS: Extra life awarded!$'   ; Bonus life message
+
+; Modified proc_guess procedure:
+; - Increments consecutive_correct on correct guess
+; - Resets counter on wrong guess or duplicate guess
+; - When consecutive_correct reaches 2:
+;   - Increments lives variable
+;   - Resets counter to 0
+;   - Displays bonus message instead of regular correct message
+
+; Updated game mechanics message:
+; - Added rule 11 explaining the bonus feature
